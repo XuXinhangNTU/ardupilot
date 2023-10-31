@@ -2,7 +2,7 @@
 ## Step 1
 ~ Tools/environment_install/install-prereqs-ubuntu.sh -y
 ## Step 2
-~ git submodule update --recursive
+~ git submodule update --init --recursive
 
 
 # ArduPilot Project
