@@ -18,7 +18,7 @@ git submodule update --init --recursive
 ```
 ## Step 5
 ```sh
-~ ./waf --targets bin/arducopter --upload
+./waf --targets bin/arducopter --upload
 ```
 # ArduPilot Project
 
