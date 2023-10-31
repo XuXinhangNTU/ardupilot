@@ -8,11 +8,18 @@
 // althold_init - initialise althold controller
 bool ModeAltHold::init(bool ignore_checks)
 {
-
+    if(attitude_control->check_mode()==0||attitude_control->check_mode()==1){
+        
+        return false;
+    }else{
+        gcs().send_text(MAV_SEVERITY_CRITICAL, "ALTHold mode");
+        attitude_control->set_target_mode(3);
+    }
     // initialise the vertical position controller
     if (!pos_control->is_active_z()) {
         pos_control->init_z_controller();
     }
+    // althold_state=AltHold_Flying;
 
     // set vertical speed and acceleration limits
     pos_control->set_max_speed_accel_z(-get_pilot_speed_dn(), g.pilot_speed_up, g.pilot_accel_z);
@@ -43,8 +50,8 @@ void ModeAltHold::run()
     target_climb_rate = constrain_float(target_climb_rate, -get_pilot_speed_dn(), g.pilot_speed_up);
 
     // Alt Hold State Machine Determination
-    AltHoldModeState althold_state = get_alt_hold_state(target_climb_rate);
-
+    //AltHoldModeState althold_state = get_alt_hold_state(target_climb_rate);
+    AltHoldModeState althold_state = AltHold_Flying;
     // Alt Hold State Machine
     switch (althold_state) {
 
@@ -96,7 +103,7 @@ void ModeAltHold::run()
     }
 
     // call attitude controller
-    attitude_control->input_euler_angle_roll_pitch_euler_rate_yaw(target_roll, target_pitch, target_yaw_rate);
+    attitude_control->input_euler_angle_roll_pitch_euler_rate_yaw(target_pitch, target_roll, target_yaw_rate,target_pitch, target_roll, target_yaw_rate,target_pitch, target_roll, target_yaw_rate);
 
     // run the vertical position controller and set output throttle
     pos_control->update_z_controller();

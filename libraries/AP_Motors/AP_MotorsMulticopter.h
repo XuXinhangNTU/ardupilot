@@ -79,6 +79,15 @@ public:
 
     // converts desired thrust to linearized actuator output in a range of 0~1
     float               thrust_to_actuator(float thrust_in) const;
+    int               thrust_to_actuator_wheel(float thrust_in) const;
+    int               thrust_to_actuator_ground(float thrust_in) const;
+
+    int               thrust_to_actuator_servo_left(float thrust_in) const;
+    int               thrust_to_actuator_servo_right(float thrust_in) const;
+
+    int               thrust_to_actuator_wheel_mix(float thrust_in,float mix) const;
+    float             calculate_ground_servo_angle(float pitch_angle,float thrust) const;
+    //MINIDOUBLEBEE FUNCTION
 
     // inverse of above
     float               actuator_to_thrust(float actuator) const;

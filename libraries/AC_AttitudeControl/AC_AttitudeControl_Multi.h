@@ -41,7 +41,7 @@
 
 class AC_AttitudeControl_Multi : public AC_AttitudeControl {
 public:
-	AC_AttitudeControl_Multi(AP_AHRS_View &ahrs, const AP_MultiCopter &aparm, AP_MotorsMulticopter& motors);
+	AC_AttitudeControl_Multi(AP_AHRS_View &ahrs, const AP_MultiCopter &aparm, AP_MotorsMulticopter& motors,AP_WheelEncoder &wheel);
 
 	// empty destructor to suppress compiler warning
 	virtual ~AC_AttitudeControl_Multi() {}
@@ -50,7 +50,12 @@ public:
     AC_PID& get_rate_roll_pid() override { return _pid_rate_roll; }
     AC_PID& get_rate_pitch_pid() override { return _pid_rate_pitch; }
     AC_PID& get_rate_yaw_pid() override { return _pid_rate_yaw; }
-
+    AC_PID& get_BRe_yaw_pid()override{return _bb_pid_rate_yaw;}
+    AC_PID& get_BRe_pitch_pid()override{return _bb_pid_rate_pitch;}
+    AC_PID& get_BRe_roll_pid()override{return _bb_pid_rate_roll;}
+    AC_PID& get_BRw_yaw_pid()override{return _bbw_pid_rate_yaw;}
+    AC_PID& get_BRw_pitch_pid()override{return _bbw_pid_rate_pitch;}
+    AC_PID& get_BRw_roll_pid()override{return _bbw_pid_rate_roll;}
     // Update Alt_Hold angle maximum
     void update_althold_lean_angle_max(float throttle_in) override;
 
@@ -77,7 +82,7 @@ public:
 
     // sanity check parameters.  should be called once before take-off
     void parameter_sanity_check() override;
-
+    float radians_calculate(float ve);
     // user settable parameters
     static const struct AP_Param::GroupInfo var_info[];
 
@@ -96,6 +101,15 @@ protected:
     AC_PID                _pid_rate_roll;
     AC_PID                _pid_rate_pitch;
     AC_PID                _pid_rate_yaw;
+
+    AC_PID                _bb_pid_rate_roll;
+    AC_PID                _bb_pid_rate_pitch;
+    AC_PID                _bb_pid_rate_yaw;
+
+    AC_PID                _bbw_pid_rate_roll;
+    AC_PID                _bbw_pid_rate_pitch;
+    AC_PID                _bbw_pid_rate_yaw;
+
 
     AP_Float              _thr_mix_man;     // throttle vs attitude control prioritisation used when using manual throttle (higher values mean we prioritise attitude control over throttle)
     AP_Float              _thr_mix_min;     // throttle vs attitude control prioritisation used when landing (higher values mean we prioritise attitude control over throttle)

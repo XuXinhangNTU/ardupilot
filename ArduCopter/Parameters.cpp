@@ -714,7 +714,7 @@ const AP_Param::Info Copter::var_info[] = {
     // @Group:
     // @Path: Parameters.cpp
     GOBJECT(g2, "",  ParametersG2),
-
+    GOBJECT(g7, "",  ParametersG7),
     // @Group:
     // @Path: ../libraries/AP_Vehicle/AP_Vehicle.cpp
     PARAM_VEHICLE_INFO,
@@ -851,6 +851,10 @@ const AP_Param::GroupInfo ParametersG2::var_info[] = {
     // @Path: ../libraries/AP_SmartRTL/AP_SmartRTL.cpp
     AP_SUBGROUPINFO(smart_rtl, "SRTL_", 21, ParametersG2, AP_SmartRTL),
 #endif
+
+    // @Group: WENC
+    // @Path: ../libraries/AP_WheelEncoder/AP_WheelEncoder.cpp
+    AP_SUBGROUPINFO(wheel_encoder, "WENC", 22, ParametersG2, AP_WheelEncoder),
 
 #if AP_WINCH_ENABLED
     // 22 was AP_WheelEncoder
@@ -1161,6 +1165,10 @@ const AP_Param::GroupInfo ParametersG2::var_info[] = {
     // ID 62 is reserved for the SHOW_... parameters from the Skybrush fork at
     // https://github.com/skybrush-io/ardupilot
 
+    // @Group: WRC
+    // @Path: ../libraries/AP_WheelEncoder/AP_WheelRateControl.cpp
+    AP_SUBGROUPINFO(wheel_rate_control, "WRC", 61, ParametersG2, AP_WheelRateControl),
+    
     AP_GROUPEND
 };
 
@@ -1209,6 +1217,166 @@ const AP_Param::GroupInfo ParametersG2::var_info2[] = {
     AP_GROUPINFO("SURFTRAK_TC", 5, ParametersG2, surftrak_tc, 1.0),
 
     // ID 62 is reserved for the AP_SUBGROUPEXTENSION
+
+    AP_GROUPEND
+};
+
+/*
+  3nd group of parameters
+  used by 2bbot 
+ */
+const AP_Param::GroupInfo ParametersG7::var_info[] = {
+
+    // @Param: BB_PIT_R_P
+    // @DisplayName: BB GROUND PITCH RATE P
+    // @Description: PID controller use in the ground
+    // @Range:0-1
+    // @User: Standard
+    AP_GROUPINFO("BB_PIT_R_P", 1, ParametersG7,bb_pit_r_P, 0),
+
+    // @Param: BB_PIT_R_I
+    // @DisplayName: BB GROUND PITCH RATE P
+    // @Description: PID controller use in the ground
+    // @Range:0-1
+    // @User: Standard
+    AP_GROUPINFO("BB_PIT_R_I", 2, ParametersG7,bb_pit_r_I, 0),
+    
+    // @Param: BB_HOV_DCOU
+    // @DisplayName: Hover Throttle Ground
+    // @Description: Ground hover throttle in decouple mode
+    // @Range:0-1
+    // @User: Standard
+    AP_GROUPINFO("BB_HOV_DC", 3, ParametersG7,_hover_throttle_decouple, 1335),
+    
+    // @Param: BB_LIF_DCRG
+    // @DisplayName: Lift Range
+    // @Description: Lift range in decouple mode equal to max-mid
+    // @Range:1000-2000
+    // @User: Standard
+    AP_GROUPINFO("BB_LIF_DC", 4, ParametersG7,_lift_range, 60),
+    
+    // @Param: BB_DOWN_DC
+    // @DisplayName: Down range
+    // @Description: Down range in decouple mode equal to mid-min
+    // @Range:0-100
+    // @User: Standard
+    AP_GROUPINFO("BB_DOWN_DC",5, ParametersG7,_down_range, 30),
+    
+    // @Param: BB_WHEEL_MID
+    // @DisplayName: BB WHEEL MID PWM
+    // @Description: WHEEL PID MID (1000 is tested)
+    // @Range:0-2000
+    // @User: Standard
+    AP_GROUPINFO("BB_WHEEL_MID", 6, ParametersG7, _wheel_mid, 1000),
+    
+    // @Param: BB_WHEEL_RNG
+    // @DisplayName: BB WHEEL RANGE
+    // @Description: BB WHEEL PWM RANGE
+    // @Range:0-2000
+    // @User: Standard
+    AP_GROUPINFO("BB_WHEEL_RNG", 7, ParametersG7,_wheel_range, 800),
+
+    // @Param: LSERVO_MID
+    // @DisplayName: LEFT SERVO_MID
+    // @Description: LEFT SERVO MID PWM
+    // @Range:0-2000
+    // @User: Standard
+    AP_GROUPINFO("LSERVO_MID", 8, ParametersG7,_left_servo_mid, 1500),
+    
+    // @Param: RSERVO_MID
+    // @DisplayName: RIGHT SERVO MID
+    // @Description: RIGHT SERVO MID PWM
+    // @Range:0-2000
+    // @User: Standard
+    AP_GROUPINFO("RSERVO_MID", 9, ParametersG7,_right_servo_mid,1500),
+    
+    // @Param: RSERVO_NINE
+    // @DisplayName: RIGHT SERVO NINE
+    // @Description: PWM RANGE FOR SERVO TO GET 90 DEGREE
+    // @Range:0-2000
+    // @User: Standard
+    AP_GROUPINFO("RSERVO_NINE", 10, ParametersG7,_right_servo_nine, 640),
+    
+    // @Param: LSERVO_NINE
+    // @DisplayName: LEFT SERVO NINE
+    // @Description: PWM RANGE FOR SERVO TO GET 90 DEGREE
+    // @Range:0-2000
+    // @User: Standard
+    AP_GROUPINFO("LSERVO_NINE", 11, ParametersG7,_left_servo_nine, 640),
+    
+    // @Param: TRAN_THR_LOW
+    // @DisplayName: TRAN THROTTLE LOW
+    // @Description: Nothing
+    // @Range:0-2000
+    // @User: Standard
+    AP_GROUPINFO("TRAN_THR_LOW", 12, ParametersG7, _tran_throttle_low, 300),
+    
+    // @Param: TRAN_THR_HIGH
+    // @DisplayName: TRAN_THR_HIGH
+    // @Description: NOTHING
+    // @Range:0-2000
+    // @User: Standard
+    AP_GROUPINFO("TRAN_THR_HIGH", 13, ParametersG7,_tran_trottle_high, 500),
+    
+    // @Param: MODE_SWI_DEC
+    // @DisplayName:MODE SWTICH DECOUPLE
+    // @Description: PWM RANGE FOR SERVO TO GET 90 DEGREE
+    // @Range:0-2000
+    // @User: Standard
+    AP_GROUPINFO("MODE_SWI_DEC", 14, ParametersG7,_mode_switch_decouple, 250),
+
+    // @Param: MODE_SWI_FLY
+    // @DisplayName: MODE SWTICH FLY TEST
+    // @Description: PWM RANGE FOR SERVO TO GET 90 DEGREE
+    // @Range:0-2000
+    // @User: Standard
+    AP_GROUPINFO("MODE_SWI_FLY", 15, ParametersG7,_mode_switch_fly, 750),
+
+    // @Param: BB_HOV
+    // @DisplayName: MODE SWTICH FLY TEST
+    // @Description: PWM RANGE FOR SERVO TO GET 90 DEGREE
+    // @Range:0-1
+    // @User: Standard
+    AP_GROUPINFO("BB_HOV", 16, ParametersG7,thr_ho, 0.3),
+
+    // @Param: BB_TEST_MODE
+    // @DisplayName: MODE SWTICH FLY TEST
+    // @Description: PWM RANGE FOR SERVO TO GET 90 DEGREE
+    // @Range:0-1
+    // @User: Standard
+    AP_GROUPINFO("BB_TEST_MODE", 17, ParametersG7,_test_mode, 1),
+
+    // @Param: BB_TEST_ANG
+    // @DisplayName: MODE SWTICH FLY TEST
+    // @Description: PWM RANGE FOR SERVO TO GET 90 DEGREE
+    // @Range:0-1
+    // @User: Standard
+    AP_GROUPINFO("BB_TEST_ANG", 18, ParametersG7,_test_servo_angle, 0),
+
+    // @Param: BB_TEST_PWM
+    // @DisplayName: MODE SWTICH FLY TEST
+    // @Description: PWM RANGE FOR SERVO TO GET 90 DEGREE
+    // @Range:0-1
+    // @User: Standard
+    AP_GROUPINFO("BB_TEST_PWM", 19, ParametersG7,_test_thrust, 1000),
+    // @Param: BB_SQRT_P
+    // @DisplayName: MODE SWTICH FLY TEST
+    // @Description: PWM RANGE FOR SERVO TO GET 90 DEGREE
+    // @Range:0-1
+    // @User: Standard
+    AP_GROUPINFO("BB_SQRT_P", 20, ParametersG7,_sqrt_p,1),
+    // @Param: BB_ACC_LIM
+    // @DisplayName: MODE SWTICH FLY TEST
+    // @Description: PWM RANGE FOR SERVO TO GET 90 DEGREE
+    // @Range:0-1
+    // @User: Standard
+    AP_GROUPINFO("BB_ACC_LIM", 21, ParametersG7,_ang_accel_limit,1),
+    // @Param: BB_PWM_LIM
+    // @DisplayName: MODE SWTICH FLY TEST
+    // @Description: PWM RANGE FOR SERVO TO GET 90 DEGREE
+    // @Range:0-1
+    // @User: Standard
+    AP_GROUPINFO("BB_PWM_LIM", 22, ParametersG7, _PWM_limit_upper,1400),
 
     AP_GROUPEND
 };
@@ -1268,10 +1436,20 @@ ParametersG2::ParametersG2(void)
 #if WEATHERVANE_ENABLED == ENABLED
     ,weathervane()
 #endif
+    ,wheel_rate_control(wheel_encoder)
 {
     AP_Param::setup_object_defaults(this, var_info);
     AP_Param::setup_object_defaults(this, var_info2);
 }
+
+
+
+
+
+
+
+
+
 
 /*
   This is a conversion table from old parameter values to new

@@ -186,6 +186,7 @@ public:
     friend class AP_Rally_Copter;
     friend class Parameters;
     friend class ParametersG2;
+    friend class ParametersG7;
     friend class AP_Avoidance_Copter;
 
 #if ADVANCED_FAILSAFE == ENABLED
@@ -236,6 +237,7 @@ private:
     // Global parameters are all contained within the 'g' class.
     Parameters g;
     ParametersG2 g2;
+    ParametersG7 g7;
 
     // used to detect MAVLink acks from GCS to stop compassmot
     uint8_t command_ack_counter;
@@ -245,6 +247,9 @@ private:
     RC_Channel *channel_pitch;
     RC_Channel *channel_throttle;
     RC_Channel *channel_yaw;
+    RC_Channel *channel_mode;
+    RC_Channel *channel_uncouple_pitch;
+
 
     AP_Logger logger;
 
@@ -857,6 +862,7 @@ private:
     void set_mode_land_with_pause(ModeReason reason);
     bool landing_with_GPS();
 
+    void update_wheel_encoder();
     // motor_test.cpp
     void motor_test_output();
     bool mavlink_motor_control_check(const GCS_MAVLINK &gcs_chan, bool check_rc, const char* mode);
@@ -874,6 +880,12 @@ private:
     int32_t home_bearing();
     uint32_t home_distance();
 
+    // latest wheel encoder values
+    float wheel_encoder_last_distance_m[WHEELENCODER_MAX_INSTANCES];    // total distance recorded by wheel encoder (for reporting to GCS)
+    bool wheel_encoder_initialised;                                     // true once arrays below have been initialised to sensors initial values
+    float wheel_encoder_last_angle_rad[WHEELENCODER_MAX_INSTANCES];     // distance in radians at time of last update to EKF
+    uint32_t wheel_encoder_last_reading_ms[WHEELENCODER_MAX_INSTANCES]; // system time of last ping from each encoder
+    uint8_t wheel_encoder_last_index_sent; 
     // Parameters.cpp
     void load_parameters(void) override;
     void convert_pid_parameters(void);
@@ -906,10 +918,15 @@ private:
     bool rangefinder_up_ok() const;
     void update_rangefinder_terrain_offset();
     void update_optical_flow(void);
+    void logging_gg(void);
+
 
     // takeoff_check.cpp
     void takeoff_check();
-
+    AP_WheelEncoder& get_wheel_encoder() { return g2.wheel_encoder; }
+    AP_WheelRateControl& get_wheel_rate_control() { return g2.wheel_rate_control; }
+    void send_wheel_encoder_distance(mavlink_channel_t chan);
+  
     // RC_Channel.cpp
     void save_trim();
     void auto_trim();

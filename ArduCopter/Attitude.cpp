@@ -16,6 +16,25 @@ void Copter::run_rate_controller()
 
     // run low level rate controllers that only require IMU data
     attitude_control->rate_controller_run(); 
+
+    // AP::logger().Write("BGWtest","TimesUS,rnd,rn,drd,dvr,vr,E","Qffffff",
+    // AP_HAL::micros64(),(double)(0.1),(double)(0.2),
+    // (double)(0.3),(double)(0.4),
+    // (double)(0.5),(double)(0.6));
+
+
+    // AP::logger().Write("BGW","TimesUS,rnd,rn,drd,dvr,vr,E,ex,ey,ez,vxf","Qffffffffff",
+    // AP_HAL::micros64(),(double)(attitude_control->roll_deg_gw),(double)(attitude_control->roll_gw),
+    // (double)(attitude_control->desired_roll_deg_gw),(double)(attitude_control->desired_v_roll),
+    // (double)(attitude_control->now_v_roll),(double)(attitude_control->true_error),(double)(attitude_control->_error_x),
+    // (double)(attitude_control->_error_y),(double)(attitude_control->_error_z),(double)(attitude_control->agv_error));
+
+    // AP::logger().Write("BGG","TimesUS,rnd,rn,drd,cot,err,rr,rl,rf,ve,dr","Qffffffffff",
+    // AP_HAL::micros64(),(double)(attitude_control->roll_deg_gw),(double)(attitude_control->roll_gw),
+    // (double)(attitude_control->_balance_desired_roll),(double)(attitude_control->_balance_control),(double)(attitude_control->_balance_error),
+    // (double)(attitude_control->rate_right),(double)(attitude_control->rate_left),
+    // (double)(attitude_control->rate_forward),(double)(attitude_control->_velocity_error),(double)(attitude_control->_rate_desired));
+    
 }
 
 /*************************************************************

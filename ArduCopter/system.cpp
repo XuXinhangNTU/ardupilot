@@ -43,6 +43,8 @@ void Copter::init_ardupilot()
     // initialise battery monitor
     battery.init();
 
+    g2.wheel_encoder.init();
+
     // Init RSSI
     rssi.init();
     
@@ -453,11 +455,11 @@ void Copter::allocate_motors(void)
 #if FRAME_CONFIG != HELI_FRAME
     if ((AP_Motors::motor_frame_class)g2.frame_class.get() == AP_Motors::MOTOR_FRAME_6DOF_SCRIPTING) {
 #if AP_SCRIPTING_ENABLED
-        attitude_control = new AC_AttitudeControl_Multi_6DoF(*ahrs_view, aparm, *motors);
+        attitude_control = new AC_AttitudeControl_Multi_6DoF(*ahrs_view, aparm, *motors,get_wheel_encoder());
         ac_var_info = AC_AttitudeControl_Multi_6DoF::var_info;
 #endif // AP_SCRIPTING_ENABLED
     } else {
-        attitude_control = new AC_AttitudeControl_Multi(*ahrs_view, aparm, *motors);
+        attitude_control = new AC_AttitudeControl_Multi(*ahrs_view, aparm, *motors,get_wheel_encoder());
         ac_var_info = AC_AttitudeControl_Multi::var_info;
     }
 #else

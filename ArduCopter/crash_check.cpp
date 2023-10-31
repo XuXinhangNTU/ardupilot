@@ -84,8 +84,9 @@ void Copter::crash_check()
     }
 
     // we may be crashing
-    crash_counter++;
-
+    //crash_counter++;
+    crash_counter=0;
+    return;
     // check if crashing for 2 seconds
     if (crash_counter >= (CRASH_CHECK_TRIGGER_SEC * scheduler.get_loop_rate_hz())) {
         AP::logger().Write_Error(LogErrorSubsystem::CRASH_CHECK, LogErrorCode::CRASH_CHECK_CRASH);

@@ -51,10 +51,11 @@ void Copter::update_land_detector()
         if (!flightmode->is_taking_off() && motors->get_takeoff_collective() && motors->get_spool_state() == AP_Motors::SpoolState::THROTTLE_UNLIMITED) {
 #else
         // if throttle output is high then clear landing flag
-        if (!flightmode->is_taking_off() && motors->get_throttle_out() > get_non_takeoff_throttle() && motors->get_spool_state() == AP_Motors::SpoolState::THROTTLE_UNLIMITED) {
+        if (!flightmode->is_taking_off() && motors->get_throttle_out() > get_non_takeoff_throttle() && motors->get_spool_state() == AP_Motors::SpoolState::THROTTLE_UNLIMITED&&0) {
             // this should never happen because take-off should be detected at the flight mode level
             // this here to highlight there is a bug or missing take-off detection
             INTERNAL_ERROR(AP_InternalError::error_t::flow_of_control);
+            //internal_error need to be edit
 #endif
             set_land_complete(false);
         }
@@ -133,6 +134,8 @@ void Copter::update_land_detector()
 // set land_complete flag and disarm motors if disarm-on-land is configured
 void Copter::set_land_complete(bool b)
 {
+    if(attitude_control->check_mode()==0||attitude_control->check_mode()==1)
+        return;
     // if no change, exit immediately
     if( ap.land_complete == b )
         return;
@@ -165,6 +168,8 @@ void Copter::set_land_complete(bool b)
 // set land complete maybe flag
 void Copter::set_land_complete_maybe(bool b)
 {
+    if(attitude_control->check_mode()==0||attitude_control->check_mode()==1)
+        return;
     // if no change, exit immediately
     if (ap.land_complete_maybe == b)
         return;

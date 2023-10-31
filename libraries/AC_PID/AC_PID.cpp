@@ -270,7 +270,11 @@ void AC_PID::reset_I()
 {
     _integrator = 0.0;
 }
+float AC_PID::show_kp()
+{
+    return _kp.get();
 
+}
 void AC_PID::load_gains()
 {
     _kp.load();

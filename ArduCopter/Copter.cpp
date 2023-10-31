@@ -256,6 +256,8 @@ const AP_Scheduler::Task Copter::scheduler_tasks[] = {
 #if STATS_ENABLED == ENABLED
     SCHED_TASK_CLASS(AP_Stats,             &copter.g2.stats,            update,           1, 100, 171),
 #endif
+    SCHED_TASK(update_wheel_encoder,   50,    200,  200),
+    //SCHED_TASK(logging_gg,   25,    50,  201),
 };
 
 void Copter::get_scheduler_tasks(const AP_Scheduler::Task *&tasks,
@@ -509,6 +511,11 @@ void Copter::loop_rate_logging()
     if (should_log(MASK_LOG_IMU_FAST)) {
         AP::ins().Write_IMU();
     }
+    //Log_Write_Attitude();
+    //AP::ins().Write_IMU();
+    logger.Write_RCOUT();
+    logging_gg();
+
 }
 
 // ten_hz_logging_loop
@@ -535,6 +542,7 @@ void Copter::ten_hz_logging_loop()
         if (rssi.enabled()) {
             logger.Write_RSSI();
         }
+        g2.wheel_encoder.Log_Write();
     }
     if (should_log(MASK_LOG_RCOUT)) {
         logger.Write_RCOUT();
@@ -688,6 +696,75 @@ void Copter::update_simple_mode(void)
     // rotate roll, pitch input from north facing to vehicle's perspective
     channel_roll->set_control_in(rollx*ahrs.cos_yaw() + pitchx*ahrs.sin_yaw());
     channel_pitch->set_control_in(-rollx*ahrs.sin_yaw() + pitchx*ahrs.cos_yaw());
+}
+
+void Copter::update_wheel_encoder()
+{
+    // exit immediately if not enabled
+    if (g2.wheel_encoder.num_sensors() == 0) {
+        return;
+    }
+
+    // update encoders
+    g2.wheel_encoder.update();
+
+    // save cumulative distances at current time (in meters) for reporting to GCS
+    for (uint8_t i = 0; i < g2.wheel_encoder.num_sensors(); i++) {
+        wheel_encoder_last_distance_m[i] = g2.wheel_encoder.get_distance(i);
+    }
+
+    // send wheel encoder delta angle and delta time to EKF
+    // this should not be done at more than 50hz
+    // initialise on first iteration
+    if (!wheel_encoder_initialised) {
+        wheel_encoder_initialised = true;
+        for (uint8_t i = 0; i < g2.wheel_encoder.num_sensors(); i++) {
+            wheel_encoder_last_angle_rad[i] = g2.wheel_encoder.get_delta_angle(i);
+            wheel_encoder_last_reading_ms[i] = g2.wheel_encoder.get_last_reading_ms(i);
+        }
+        return;
+    }
+
+    // on each iteration send data from alternative wheel encoders
+    wheel_encoder_last_index_sent++;
+    if (wheel_encoder_last_index_sent >= g2.wheel_encoder.num_sensors()) {
+        wheel_encoder_last_index_sent = 0;
+    }
+
+    // get current time, total delta angle (since startup) and update time from sensor
+    const float curr_angle_rad = g2.wheel_encoder.get_delta_angle(wheel_encoder_last_index_sent);
+    const uint32_t sensor_reading_ms = g2.wheel_encoder.get_last_reading_ms(wheel_encoder_last_index_sent);
+    const uint32_t now_ms = AP_HAL::millis();
+
+    // calculate angular change (in radians)
+// #if HAL_NAVEKF3_AVAILABLE
+//     const float delta_angle = curr_angle_rad - wheel_encoder_last_angle_rad[wheel_encoder_last_index_sent];
+// #endif
+    wheel_encoder_last_angle_rad[wheel_encoder_last_index_sent] = curr_angle_rad;
+
+    // calculate delta time using time between sensor readings or time since last send to ekf (whichever is shorter)
+    uint32_t sensor_diff_ms = sensor_reading_ms - wheel_encoder_last_reading_ms[wheel_encoder_last_index_sent];
+    if (sensor_diff_ms == 0 || sensor_diff_ms > 100) {
+        // if no sensor update or time difference between sensor readings is too long use time since last send to ekf
+        sensor_diff_ms = now_ms - wheel_encoder_last_reading_ms[wheel_encoder_last_index_sent];
+        wheel_encoder_last_reading_ms[wheel_encoder_last_index_sent] = now_ms;
+    } else {
+        wheel_encoder_last_reading_ms[wheel_encoder_last_index_sent] = sensor_reading_ms;
+    }
+// #if HAL_NAVEKF3_AVAILABLE
+//     const float delta_time = sensor_diff_ms * 0.001f;
+
+//     /* delAng is the measured change in angular position from the previous measurement where a positive rotation is produced by forward motion of the vehicle (rad)
+//      * delTime is the time interval for the measurement of delAng (sec)
+//      * timeStamp_ms is the time when the rotation was last measured (msec)
+//      * posOffset is the XYZ body frame position of the wheel hub (m)
+//      */
+//     ahrs.EKF3.writeWheelOdom(delta_angle,
+//                         delta_time,
+//                         wheel_encoder_last_reading_ms[wheel_encoder_last_index_sent],
+//                         g2.wheel_encoder.get_pos_offset(wheel_encoder_last_index_sent),
+//                         g2.wheel_encoder.get_wheel_radius(wheel_encoder_last_index_sent));
+// #endif
 }
 
 // update_super_simple_bearing - adjusts simple bearing based on location

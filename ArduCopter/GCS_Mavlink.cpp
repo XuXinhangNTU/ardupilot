@@ -357,6 +357,10 @@ bool GCS_MAVLINK_Copter::try_send_message(enum ap_message id)
         CHECK_PAYLOAD_SIZE(WIND);
         send_wind();
         break;
+    case MSG_WHEEL_DISTANCE:
+        CHECK_PAYLOAD_SIZE(WHEEL_DISTANCE);
+        copter.send_wheel_encoder_distance(chan);
+        break;
 
     case MSG_SERVO_OUT:
     case MSG_AOA_SSA:
@@ -538,6 +542,7 @@ static const ap_message STREAM_EXTRA3_msgs[] = {
     MSG_WIND,
     MSG_RANGEFINDER,
     MSG_DISTANCE_SENSOR,
+    MSG_WHEEL_DISTANCE,
 #if AP_TERRAIN_AVAILABLE
     MSG_TERRAIN,
 #endif
@@ -1032,7 +1037,17 @@ MAV_RESULT GCS_MAVLINK_Copter::handle_command_long_packet(const mavlink_command_
         return GCS_MAVLINK::handle_command_long_packet(packet);
     }
 }
-
+void Copter::send_wheel_encoder_distance(const mavlink_channel_t chan)
+{
+    // send wheel encoder data using wheel_distance message
+    if (g2.wheel_encoder.num_sensors() > 0) {
+        double distances[MAVLINK_MSG_WHEEL_DISTANCE_FIELD_DISTANCE_LEN] {};
+        for (uint8_t i = 0; i < g2.wheel_encoder.num_sensors(); i++) {
+            distances[i] = wheel_encoder_last_distance_m[i];
+        }
+        mavlink_msg_wheel_distance_send(chan, 1000UL * AP_HAL::millis(), g2.wheel_encoder.num_sensors(), distances);
+    }
+}
 MAV_RESULT GCS_MAVLINK_Copter::handle_command_pause_continue(const mavlink_command_int_t &packet)
 {
     // requested pause

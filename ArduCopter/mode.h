@@ -4,6 +4,7 @@
 #include <AP_Math/chirp.h>
 class Parameters;
 class ParametersG2;
+class ParametersG7;
 
 class GCS_Copter;
 
@@ -98,6 +99,7 @@ public:
 
     // pilot input processing
     void get_pilot_desired_lean_angles(float &roll_out_cd, float &pitch_out_cd, float angle_max_cd, float angle_limit_cd) const;
+    void get_pilot_desired_lean_angles_gw(float &roll_out_cd,float angle_max_cd) const;
     Vector2f get_pilot_desired_velocity(float vel_max) const;
     float get_pilot_desired_yaw_rate(float yaw_in);
     float get_pilot_desired_throttle() const;
@@ -173,6 +175,7 @@ protected:
     // convenience references to avoid code churn in conversion:
     Parameters &g;
     ParametersG2 &g2;
+    ParametersG7 &g7;
     AC_WPNav *&wp_nav;
     AC_Loiter *&loiter_nav;
     AC_PosControl *&pos_control;
@@ -184,6 +187,8 @@ protected:
     RC_Channel *&channel_pitch;
     RC_Channel *&channel_throttle;
     RC_Channel *&channel_yaw;
+    RC_Channel *&channel_mode;
+    RC_Channel *&channel_uncouple_pitch;
     float &G_Dt;
 
     // note that we support two entirely different automatic takeoffs:

@@ -47,6 +47,14 @@ void AP_MotorsTailsitter::init(motor_frame_class frame_class, motor_frame_type f
     // left servo defaults to servo output 4
     SRV_Channels::set_aux_channel_default(SRV_Channel::k_tiltMotorLeft, CH_4);
     SRV_Channels::set_angle(SRV_Channel::k_tiltMotorLeft, SERVO_OUTPUT_RANGE);
+    //
+        // right throttle defaults to servo output 1
+    SRV_Channels::set_aux_channel_default(SRV_Channel::k_motor1, CH_5);
+
+    // left throttle defaults to servo output 2
+    SRV_Channels::set_aux_channel_default(SRV_Channel::k_motor2, CH_6);
+
+
 
     _mav_type = MAV_TYPE_VTOL_DUOROTOR;
 
@@ -71,6 +79,8 @@ void AP_MotorsTailsitter::set_update_rate(uint16_t speed_hz)
 
     SRV_Channels::set_rc_frequency(SRV_Channel::k_throttleLeft, speed_hz);
     SRV_Channels::set_rc_frequency(SRV_Channel::k_throttleRight, speed_hz);
+    SRV_Channels::set_rc_frequency(SRV_Channel::k_motor1, speed_hz);
+    SRV_Channels::set_rc_frequency(SRV_Channel::k_motor2, speed_hz);
 }
 
 void AP_MotorsTailsitter::output_to_motors()
@@ -85,6 +95,9 @@ void AP_MotorsTailsitter::output_to_motors()
             _actuator[1] = 0.0f;
             _actuator[2] = 0.0f;
             _external_min_throttle = 0.0;
+            _tilt_left_gg=0;
+            _tilt_right_gg=0;
+            _desired_F_PWM=1000;
             break;
         case SpoolState::GROUND_IDLE:
             set_actuator_with_slew(_actuator[0], actuator_spin_up_to_ground_idle());
@@ -100,15 +113,86 @@ void AP_MotorsTailsitter::output_to_motors()
             set_actuator_with_slew(_actuator[2], thrust_to_actuator(_throttle));
             break;
     }
+    if(mode==3){
+        SRV_Channels::set_output_pwm(SRV_Channel::k_throttleLeft, output_to_pwm(_actuator[0]));
+        SRV_Channels::set_output_pwm(SRV_Channel::k_throttleRight, output_to_pwm(_actuator[1]));
+        SRV_Channels::set_output_pwm(SRV_Channel::k_motor1, 1000);
+        SRV_Channels::set_output_pwm(SRV_Channel::k_motor2, 1000);
+        //fly mode
+        // use set scaled to allow a different PWM range on plane forward throttle, throttle range is 0 to 100
+        SRV_Channels::set_output_scaled(SRV_Channel::k_throttle, _actuator[2]*100);
+        SRV_Channels::set_output_scaled(SRV_Channel::k_tiltMotorLeft, _tilt_left*SERVO_OUTPUT_RANGE);
+        SRV_Channels::set_output_scaled(SRV_Channel::k_tiltMotorRight, _tilt_right*SERVO_OUTPUT_RANGE);
 
-    SRV_Channels::set_output_pwm(SRV_Channel::k_throttleLeft, output_to_pwm(_actuator[0]));
-    SRV_Channels::set_output_pwm(SRV_Channel::k_throttleRight, output_to_pwm(_actuator[1]));
+    }else if(mode==2){
+        SRV_Channels::set_output_pwm(SRV_Channel::k_throttleLeft, output_to_pwm(_actuator[0]));
+        SRV_Channels::set_output_pwm(SRV_Channel::k_throttleRight, output_to_pwm(_actuator[1]));
+        SRV_Channels::set_output_pwm(SRV_Channel::k_motor1, thrust_to_actuator_wheel_mix(_tilt_left_gg,mix_param));
+        SRV_Channels::set_output_pwm(SRV_Channel::k_motor2, thrust_to_actuator_wheel_mix(_tilt_right_gg,mix_param));
+        // use set scaled to allow a different PWM range on plane forward throttle, throttle range is 0 to 100
+        SRV_Channels::set_output_scaled(SRV_Channel::k_throttle, _actuator[2]*100);
+        SRV_Channels::set_output_scaled(SRV_Channel::k_tiltMotorLeft, _tilt_left*SERVO_OUTPUT_RANGE);
+        SRV_Channels::set_output_scaled(SRV_Channel::k_tiltMotorRight, _tilt_right*SERVO_OUTPUT_RANGE);
+    }else if(mode==1){
+        SRV_Channels::set_output_pwm(SRV_Channel::k_motor1, thrust_to_actuator_wheel(_tilt_left_gg));
+        SRV_Channels::set_output_pwm(SRV_Channel::k_motor2, thrust_to_actuator_wheel(_tilt_right_gg));
+        //ADD HERE BALANCE
+        SRV_Channels::set_output_scaled(SRV_Channel::k_throttle, _actuator[2]*100);
+        SRV_Channels::set_output_scaled(SRV_Channel::k_tiltMotorLeft, _tilt_left*SERVO_OUTPUT_RANGE);
+        SRV_Channels::set_output_scaled(SRV_Channel::k_tiltMotorRight, _tilt_right*SERVO_OUTPUT_RANGE);
+        SRV_Channels::set_output_pwm(SRV_Channel::k_throttleLeft, 1000);
+        SRV_Channels::set_output_pwm(SRV_Channel::k_throttleRight, 1000);
+    }else if(mode==0){
+        if(_test_mode>0&&_test_mode<2)
+        {
+            SRV_Channels::set_output_pwm(SRV_Channel::k_motor1, thrust_to_actuator_wheel(0));
+            SRV_Channels::set_output_pwm(SRV_Channel::k_motor2, thrust_to_actuator_wheel(0));
+            SRV_Channels::set_output_scaled(SRV_Channel::k_throttle, _actuator[2]*100);
+            //SRV_Channels::set_output_pwm(SRV_Channel::k_tiltMotorLeft, 1525+thrust_to_actuator_servo(0-_tilt_left_gw));
+            //SRV_Channels::set_output_pwm(SRV_Channel::k_tiltMotorRight, 1518+thrust_to_actuator_servo(0-_tilt_right_gw));
+            SRV_Channels::set_output_pwm(SRV_Channel::k_tiltMotorLeft, _left_servo_mid+thrust_to_actuator_servo_left(_test_servo_angle));
+            SRV_Channels::set_output_pwm(SRV_Channel::k_tiltMotorRight, _right_servo_mid+thrust_to_actuator_servo_right(_test_servo_angle));
+            SRV_Channels::set_output_pwm(SRV_Channel::k_throttleLeft, thrust_to_actuator_ground(0));
+            SRV_Channels::set_output_pwm(SRV_Channel::k_throttleRight, thrust_to_actuator_ground(0));
+        }else if(_test_mode>2){
+            SRV_Channels::set_output_pwm(SRV_Channel::k_motor1, thrust_to_actuator_wheel(0));
+            SRV_Channels::set_output_pwm(SRV_Channel::k_motor2, thrust_to_actuator_wheel(0));
+            SRV_Channels::set_output_scaled(SRV_Channel::k_throttle, _actuator[2]*100);
+            output_theta_latest=_left_servo_mid+thrust_to_actuator_servo_left(0-calculate_ground_servo_angle(pitch_deg_gw,_servo_bias_gw));
+            //SRV_Channels::set_output_pwm(SRV_Channel::k_tiltMotorLeft, 1525+thrust_to_actuator_servo(0-_tilt_left_gw));
+            //SRV_Channels::set_output_pwm(SRV_Channel::k_tiltMotorRight, 1518+thrust_to_actuator_servo(0-_tilt_right_gw));
+            SRV_Channels::set_output_pwm(SRV_Channel::k_tiltMotorLeft, _left_servo_mid+thrust_to_actuator_servo_left(0-calculate_ground_servo_angle(pitch_deg_gw,_servo_bias_gw)));
+            SRV_Channels::set_output_pwm(SRV_Channel::k_tiltMotorRight, _right_servo_mid+thrust_to_actuator_servo_right(0-calculate_ground_servo_angle(pitch_deg_gw,_servo_bias_gw)));
+            SRV_Channels::set_output_pwm(SRV_Channel::k_throttleLeft, 1000);
+            SRV_Channels::set_output_pwm(SRV_Channel::k_throttleRight, _test_thrust);
 
-    // use set scaled to allow a different PWM range on plane forward throttle, throttle range is 0 to 100
-    SRV_Channels::set_output_scaled(SRV_Channel::k_throttle, _actuator[2]*100);
+        }else{
+            SRV_Channels::set_output_pwm(SRV_Channel::k_motor1, thrust_to_actuator_wheel(_tilt_wheel_left_gw));
+            SRV_Channels::set_output_pwm(SRV_Channel::k_motor2, thrust_to_actuator_wheel(_tilt_wheel_right_gw));
+            SRV_Channels::set_output_scaled(SRV_Channel::k_throttle, _actuator[2]*100);
+            //SRV_Channels::set_output_pwm(SRV_Channel::k_tiltMotorLeft, 1525+thrust_to_actuator_servo(0-_tilt_left_gw));
+            //SRV_Channels::set_output_pwm(SRV_Channel::k_tiltMotorRight, 1518+thrust_to_actuator_servo(0-_tilt_right_gw));
+            output_theta_latest=_left_servo_mid+thrust_to_actuator_servo_left(0-calculate_ground_servo_angle(pitch_deg_gw,_servo_bias_gw));
+            // output_F_latest=thrust_to_actuator_ground(_tilt_left_gw);
+            output_F_latest=_desired_F_PWM;
+            SRV_Channels::set_output_pwm(SRV_Channel::k_tiltMotorLeft, _left_servo_mid+thrust_to_actuator_servo_left(0-calculate_ground_servo_angle(pitch_deg_gw,_servo_bias_gw)));
+            SRV_Channels::set_output_pwm(SRV_Channel::k_tiltMotorRight, _right_servo_mid+thrust_to_actuator_servo_right(0-calculate_ground_servo_angle(pitch_deg_gw,_servo_bias_gw)));
+            SRV_Channels::set_output_pwm(SRV_Channel::k_throttleLeft, _desired_F_PWM);
+            SRV_Channels::set_output_pwm(SRV_Channel::k_throttleRight,_desired_F_PWM);   
+            // SRV_Channels::set_output_pwm(SRV_Channel::k_throttleLeft, thrust_to_actuator_ground(_tilt_left_gw));
+            // SRV_Channels::set_output_pwm(SRV_Channel::k_throttleRight, thrust_to_actuator_ground(_tilt_right_gw));   
+        }
+    }
+    
+    //fly end
+    //gcs().send_text(MAV_SEVERITY_CRITICAL, "motor_mode %5.3f", (double)mode);
+    //
 
-    SRV_Channels::set_output_scaled(SRV_Channel::k_tiltMotorLeft, _tilt_left*SERVO_OUTPUT_RANGE);
-    SRV_Channels::set_output_scaled(SRV_Channel::k_tiltMotorRight, _tilt_right*SERVO_OUTPUT_RANGE);
+
+    // _output_test_seq(1, 1000);
+    // _output_test_seq(2, 1000);
+    // _output_test_seq(3, 1000);
+    // _output_test_seq(4, 1000);
 
 }
 
@@ -141,12 +225,26 @@ void AP_MotorsTailsitter::output_armed_stabilizing()
     float   thrust_max;                 // highest motor value
     float   thrust_min;                 // lowest motor value
     float   thr_adj = 0.0f;             // the difference between the pilot's desired throttle and throttle_thrust_best_rpy
+    
 
+
+    float   roll_thrust_gg;               // pitch thrust input value, +/- 1.0
+    float   yaw_thrust_gg;                 // yaw thrust input value, +/- 1.0
+    float   servo_gw;
+    float   pitch_thrust_gw;             //pitch thrust
     // apply voltage and air pressure compensation
     const float compensation_gain = get_compensation_gain();
     roll_thrust = (_roll_in + _roll_in_ff) * compensation_gain;
     pitch_thrust = _pitch_in + _pitch_in_ff;
     yaw_thrust = _yaw_in + _yaw_in_ff;
+
+    pitch_thrust_gw=_roll_in_gw+_roll_in_ff_gw;
+
+    roll_thrust_gg = _roll_in_gg + _roll_in_ff_gg;
+    yaw_thrust_gg = _yaw_in_gg + _yaw_in_ff_gg;
+
+    servo_gw=_yaw_in_gw+_yaw_in_ff_gw;
+   
     throttle_thrust = get_throttle() * compensation_gain;
     const float max_boost_throttle = _throttle_avg_max * compensation_gain;
 
@@ -167,7 +265,7 @@ void AP_MotorsTailsitter::output_armed_stabilizing()
     if (roll_thrust >= 1.0) {
         // cannot split motor outputs by more than 1
         roll_thrust = 1;
-        limit.roll = true;
+        limit.pitch = true;
     }
 
     // calculate left and right throttle outputs
@@ -210,8 +308,28 @@ void AP_MotorsTailsitter::output_armed_stabilizing()
     }
 
     // thrust vectoring
-    _tilt_left  = pitch_thrust - yaw_thrust;
-    _tilt_right = pitch_thrust + yaw_thrust;
+    _tilt_left  = pitch_thrust + yaw_thrust;
+    _tilt_right = pitch_thrust - yaw_thrust;
+
+    _tilt_left_gw=pitch_thrust_gw;
+    _tilt_right_gw=pitch_thrust_gw;
+
+    _servo_bias_gw=0-servo_gw;
+
+    _tilt_left_gg=roll_thrust_gg*0.8 + yaw_thrust_gg*0.2;
+    _tilt_right_gg=roll_thrust_gg*0.8 - yaw_thrust_gg*0.2;
+    _tilt_wheel_left_gw=-pitch_gw*0.16 + yaw_gw*0.04;
+    _tilt_wheel_right_gw=-pitch_gw*0.16 - yaw_gw*0.04;
+    // gcs().send_text(MAV_SEVERITY_CRITICAL, "1: %5.3f", (double)thrust_to_actuator_wheel(1.0));
+    // gcs().send_text(MAV_SEVERITY_CRITICAL, "-1: %5.3f", (double)thrust_to_actuator_wheel(-1.0));
+    // gcs().send_text(MAV_SEVERITY_CRITICAL, "1out: %5.3f", (double)output_to_pwm(0.5));
+    // gcs().send_text(MAV_SEVERITY_CRITICAL, "-1out: %5.3f", (double)output_to_pwm(-0.5));
+    
+    //gcs().send_text(MAV_SEVERITY_CRITICAL, "mix: %5.3f", (double)mix_param);
+    
+
+
+    
 }
 
 // output_test_seq - spin a motor at the pwm value specified

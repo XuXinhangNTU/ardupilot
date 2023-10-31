@@ -489,6 +489,107 @@ float AP_MotorsMulticopter::thrust_to_actuator(float thrust_in) const
     return _spin_min + (_spin_max - _spin_min) * apply_thrust_curve_and_volt_scaling(thrust_in);
 }
 
+
+// converts desired thrust to linearized actuator output in a range of 0~1
+int AP_MotorsMulticopter::thrust_to_actuator_wheel(float thrust_in) const
+{   
+    if(thrust_in>0){
+        thrust_in = constrain_float(thrust_in, 0.0f, 1.0f);
+        return int(_wheel_mid + _wheel_range * apply_thrust_curve_and_volt_scaling(thrust_in));
+    }else
+    {
+        thrust_in = constrain_float(-thrust_in, 0.0f, 1.0f);
+        return int(_wheel_mid - _wheel_range * apply_thrust_curve_and_volt_scaling(thrust_in));
+    }
+
+}
+int AP_MotorsMulticopter::thrust_to_actuator_ground(float thrust_in) const
+{   
+    if(!armed())
+        return 1000;
+    if(thrust_in>0){
+        thrust_in = constrain_float(thrust_in, 0.0f, 1.0f);
+        return int(_hover_throttle_decouple + _lift_range * apply_thrust_curve_and_volt_scaling(thrust_in));
+    }else
+    {
+        thrust_in = constrain_float(-thrust_in, 0.0f, 1.0f);
+        return int(_hover_throttle_decouple - _down_range * apply_thrust_curve_and_volt_scaling(thrust_in));
+    }
+
+}
+
+int AP_MotorsMulticopter::thrust_to_actuator_servo_left(float thrust_in) const
+{   
+    if(thrust_in>0){
+        thrust_in = constrain_float(thrust_in, 0.0f, 1.0f);
+        return int(_left_servo_nine*thrust_in);
+    }else
+    {
+        thrust_in = constrain_float(-thrust_in, 0.0f, 1.0f);
+        return int(-_left_servo_nine*thrust_in);
+    }
+
+}
+
+int AP_MotorsMulticopter::thrust_to_actuator_servo_right(float thrust_in) const
+{   
+    if(thrust_in>0){
+        thrust_in = constrain_float(thrust_in, 0.0f, 1.0f);
+        return int(_right_servo_nine*thrust_in);
+    }else
+    {
+        thrust_in = constrain_float(-thrust_in, 0.0f, 1.0f);
+        return int(-_right_servo_nine*thrust_in);
+    }
+
+}
+
+
+int AP_MotorsMulticopter::thrust_to_actuator_wheel_mix(float thrust_in,float mix) const
+{   
+    if(thrust_in>0){
+        thrust_in = constrain_float(thrust_in, 0.0f, 1.0f)*mix;
+        return int(_wheel_mid + _wheel_range * apply_thrust_curve_and_volt_scaling(thrust_in));
+    }else
+    {
+        thrust_in = constrain_float(-thrust_in, 0.0f, 1.0f)*mix;
+        return int(_wheel_mid - _wheel_range * apply_thrust_curve_and_volt_scaling(thrust_in));
+    }
+
+}
+
+// void AP_MotorsMulticopter::mini_mixer(float speed,int& direct1,int&direct2,int& pwm_output){
+//     //do the remaping and sign(speed) based on the result to set the direction 1 to 0/2000
+//     //do the pwm_calculate absf(speed) mapping it speed / max_speed *2000 int()
+// }
+float AP_MotorsMulticopter::calculate_ground_servo_angle(float pitch_angle,float thrust) const
+{   
+    if(thrust>0){
+        thrust = constrain_float(thrust, 0.0f, 1.0f);
+    }else
+    {
+        thrust = -constrain_float(-thrust, 0.0f, 1.0f);
+    }
+    pitch_angle=pitch_angle+thrust*5;
+
+
+    float servo_angle;
+    if(pitch_angle<=90&&pitch_angle>=-90)
+    {
+        servo_angle=pitch_angle/90;
+
+    }else{
+        if(pitch_angle>0){
+            servo_angle=1;
+        }else{
+            servo_angle=-1;
+        }
+        
+    }
+    return -servo_angle;
+}
+
+
 // inverse of above, tested with AP_Motors/examples/expo_inverse_test
 // used to calculate equivelent motor throttle level to direct ouput, used in tailsitter transtions
 float AP_MotorsMulticopter::actuator_to_thrust(float actuator) const

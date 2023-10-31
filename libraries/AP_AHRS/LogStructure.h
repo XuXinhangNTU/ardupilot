@@ -24,6 +24,11 @@
 // @Field: Q2: Estimated attitude quaternion component 2
 // @Field: Q3: Estimated attitude quaternion component 3
 // @Field: Q4: Estimated attitude quaternion component 4
+// @Field: gyro_x: Estimated angle velocity x axis
+// @Field: gyro_y: Estimated angle velocity y axis
+// @Field: gyro_z: Estimated angle velocity z axis
+
+
 struct PACKED log_AHRS {
     LOG_PACKET_HEADER;
     uint64_t time_us;
@@ -34,6 +39,9 @@ struct PACKED log_AHRS {
     int32_t lat;
     int32_t lng;
     float q1, q2, q3, q4;
+    float gyro_x;
+    float gyro_y;
+    float gyro_z;
 };
 
 // @LoggerMessage: AOA
@@ -72,6 +80,7 @@ struct PACKED log_Attitude {
     uint16_t error_rp;
     uint16_t error_yaw;
     uint8_t  active;
+
 };
 
 // @LoggerMessage: ORGN

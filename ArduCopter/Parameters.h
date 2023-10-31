@@ -5,7 +5,8 @@
 #include <AP_Common/AP_Common.h>
 #include "RC_Channel.h"
 #include <AP_Proximity/AP_Proximity.h>
-
+#include <AP_WheelEncoder/AP_WheelEncoder.h>
+#include <AP_WheelEncoder/AP_WheelRateControl.h>
 #include <AP_Gripper/AP_Gripper_config.h>
 #if AP_GRIPPER_ENABLED
  # include <AP_Gripper/AP_Gripper.h>
@@ -383,6 +384,7 @@ public:
         // 254,255: reserved
 
         k_param_vehicle = 257, // vehicle common block of parameters
+        k_param_g7,
 
         // the k_param_* space is 9-bits in size
         // 511: reserved
@@ -565,6 +567,9 @@ public:
 #endif
 
     // wheel encoder and winch
+    AP_WheelEncoder wheel_encoder;
+    AP_WheelRateControl wheel_rate_control;
+
 #if AP_WINCH_ENABLED
     AP_Winch winch;
 #endif
@@ -694,3 +699,52 @@ public:
 };
 
 extern const AP_Param::Info        var_info[];
+
+/*
+  3nd block of parameters, to avoid going past 256 top level keys,easy to maintain 
+  The meaning of 7 is because 7 is my lucky number,and I dont wanna cause some sb bug
+  This block is for the param that use in the hybrid and ground mode
+ */
+
+class ParametersG7 {
+public:
+    ParametersG7(void){
+
+
+    };
+    // var_info for holding Parameter information
+    static const struct AP_Param::GroupInfo var_info[];
+#if BB_ENABLE==DISABLED
+    AP_Float bb_pit_r_P;
+    AP_Float bb_pit_r_I;
+    AP_Float               _left_servo_mid;
+    AP_Float               _right_servo_mid;
+    AP_Float               _left_servo_nine;
+    AP_Float               _right_servo_nine;
+
+    AP_Float               _hover_throttle_decouple;
+    AP_Float               _lift_range;
+    AP_Float               _down_range;
+    AP_Float               _wheel_mid;
+    AP_Float               _wheel_range;
+
+    AP_Int16               _test_mode;
+    AP_Float               _test_servo_angle;
+    AP_Int16               _test_thrust;
+    
+    AP_Float               _sqrt_p;
+    AP_Float               _ang_accel_limit;
+    AP_Float               _PWM_limit_upper;
+
+    AP_Int16               _tran_throttle_low;
+    AP_Int16               _tran_trottle_high;
+    AP_Int16               _mode_switch_decouple;
+    AP_Int16               _mode_switch_fly;
+    AP_Float               thr_ho;
+    // AP_Float bb_pit_r_D;
+    // AP_Float bb_pit_r_IMAX;
+    // AP_Float bb_pit_fltt;
+    // AP_Float bb_pit_flte;
+#endif
+
+};

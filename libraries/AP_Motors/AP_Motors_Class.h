@@ -54,6 +54,28 @@
 /// @class      AP_Motors
 class AP_Motors {
 public:
+    float rc_in=0;
+    float pitch_deg_gw=0;
+    float yaw_gw=0;
+    float pitch_gw=0;
+    float _servo_bias_gw=0;
+
+    float               _left_servo_mid=1500;
+    float               _right_servo_mid=1500;
+    float               _left_servo_nine=640;
+    float               _right_servo_nine=640;
+    int                 _test_mode=0;
+    float               _test_servo_angle=0;
+
+    float               output_theta_latest=1000;
+    float               output_F_latest=1000;
+
+    float               _hover_throttle_decouple=1335;
+    float               _lift_range=60;
+    float               _down_range=30;
+    float               _wheel_mid=1000;
+    float               _wheel_range=800;
+    float               _test_thrust=1100;
 
     enum motor_frame_class {
         MOTOR_FRAME_UNDEFINED = 0,
@@ -98,11 +120,57 @@ public:
         MOTOR_FRAME_TYPE_BF_X_REV = 18, // X frame, betaflight ordering, reversed motors
         MOTOR_FRAME_TYPE_Y4 = 19, //Y4 Quadrotor frame
     };
+    float theta_output_next(void)
+    {
+        float theta;
+        float bias=-_yaw_in_ff_gw-_yaw_in_gw;
+        float Pwm=_left_servo_mid+servo_left(0-ground_servo_angle(pitch_deg_gw,bias));
+        theta=-(Pwm-1500)/640*3.1415926*0.5;
+        
+        return theta;
+    }
+    int servo_left(float thrust_in) const {
+         if(thrust_in>0){
+        thrust_in = constrain_float(thrust_in, 0.0f, 1.0f);
+        return int(_left_servo_nine*thrust_in);
+        }else
+        {
+        thrust_in = constrain_float(-thrust_in, 0.0f, 1.0f);
+        return int(-_left_servo_nine*thrust_in);
+        }
 
+    }
+    float ground_servo_angle(float pitch_angle,float thrust) const
+            {   
+        if(thrust>0){
+            thrust = constrain_float(thrust, 0.0f, 1.0f);
+        }else
+        {
+            thrust = -constrain_float(-thrust, 0.0f, 1.0f);
+        }
+        pitch_angle=pitch_angle+thrust*5;
+
+
+        float servo_angle;
+        if(pitch_angle<=90&&pitch_angle>=-90)
+        {
+            servo_angle=pitch_angle/90;
+
+        }else{
+            if(pitch_angle>0){
+                servo_angle=1;
+            }else{
+                servo_angle=-1;
+            }
+            
+        }
+        return -servo_angle;
+    }
 
     // returns a formatted string into buffer, e.g. "QUAD/X"
     void get_frame_and_type_string(char *buffer, uint8_t buflen) const;
-
+    void set_mode(int mode_desired){mode=mode_desired;}
+    void set_mix(float mix){mix_param=mix;}
     // Constructor
     AP_Motors(uint16_t speed_hz = AP_MOTORS_SPEED_DEFAULT);
 
@@ -142,6 +210,20 @@ public:
     void                set_forward(float forward_in) { _forward_in = forward_in; }; // range -1 ~ +1
     void                set_lateral(float lateral_in) { _lateral_in = lateral_in; };     // range -1 ~ +1
 
+    void                set_roll_gg(float roll_in) { _roll_in_gg = roll_in; };        // range -1 ~ +1
+    void                set_roll_ff_gg(float roll_in) { _roll_in_ff_gg = roll_in; };    // range -1 ~ +1
+    void                set_pitch_gg(float pitch_in) { _pitch_in_gg = pitch_in; };    // range -1 ~ +1
+    void                set_pitch_ff_gg(float pitch_in) { _pitch_in_ff_gg = pitch_in; };  // range -1 ~ +1
+    void                set_yaw_gg(float yaw_in) { _yaw_in_gg = yaw_in; };            // range -1 ~ +1
+    void                set_yaw_ff_gg(float yaw_in) { _yaw_in_ff_gg = yaw_in; };      // range -1 ~ +1
+
+    void                set_roll_gw(float roll_in) { _roll_in_gw = roll_in; };        // range -1 ~ +1
+    void                set_roll_ff_gw(float roll_in) { _roll_in_ff_gw = roll_in; };    // range -1 ~ +1
+    void                set_pitch_gw(float pitch_in) { _pitch_in_gw = pitch_in; };    // range -1 ~ +1
+    void                set_pitch_ff_gw(float pitch_in) { _pitch_in_ff_gw = pitch_in; };  // range -1 ~ +1
+    void                set_yaw_gw(float yaw_in) { _yaw_in_gw = yaw_in; };            // range -1 ~ +1
+    void                set_yaw_ff_gw(float yaw_in) { _yaw_in_ff_gw = yaw_in; };      // range -1 ~ +1
+    void                set_F_PWM( int PWM_in){_desired_F_PWM=PWM_in;};
     // for 6DoF vehicles, sets the roll and pitch offset, this rotates the thrust vector in body frame
     virtual void        set_roll_pitch(float roll_deg, float pitch_deg) {};
 
@@ -312,6 +394,25 @@ protected:
     float               _pitch_in_ff;               // desired pitch feed forward control from attitude controller, -1 ~ +1
     float               _yaw_in;                    // desired yaw control from attitude controller, -1 ~ +1
     float               _yaw_in_ff;                 // desired yaw feed forward control from attitude controller, -1 ~ +1
+    
+    float               _desired_F_PWM;
+
+    float               _roll_in_gw;                   // desired roll control from attitude controllers, -1 ~ +1
+    float               _roll_in_ff_gw;                // desired roll feed forward control from attitude controllers, -1 ~ +1
+    float               _pitch_in_gw;                  // desired pitch control from attitude controller, -1 ~ +1
+    float               _pitch_in_ff_gw;               // desired pitch feed forward control from attitude controller, -1 ~ +1
+    float               _yaw_in_gw;                    // desired yaw control from attitude controller, -1 ~ +1
+    float               _yaw_in_ff_gw; 
+
+    float               _roll_in_gg;                   // desired roll control from attitude controllers, -1 ~ +1
+    float               _roll_in_ff_gg;                // desired roll feed forward control from attitude controllers, -1 ~ +1
+    float               _pitch_in_gg;                  // desired pitch control from attitude controller, -1 ~ +1
+    float               _pitch_in_ff_gg;               // desired pitch feed forward control from attitude controller, -1 ~ +1
+    float               _yaw_in_gg;                    // desired yaw control from attitude controller, -1 ~ +1
+    float               _yaw_in_ff_gg; 
+
+    int mode=0;
+    float mix_param;
     float               _throttle_in;               // last throttle input from set_throttle caller
     float               _throttle_out;              // throttle after mixing is complete
     float               _throttle_slew_rate;        // throttle slew rate from input

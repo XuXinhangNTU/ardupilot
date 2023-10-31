@@ -33,8 +33,8 @@ class AC_AttitudeControl_Heli : public AC_AttitudeControl {
 public:
     AC_AttitudeControl_Heli( AP_AHRS_View &ahrs,
                         const AP_MultiCopter &aparm,
-                        AP_MotorsHeli& motors) :
-        AC_AttitudeControl(ahrs, aparm, motors),
+                        AP_MotorsHeli& motors,AP_WheelEncoder &wheel) :
+        AC_AttitudeControl(ahrs, aparm, motors,wheel),
         _pid_rate_roll(AC_ATC_HELI_RATE_RP_P, AC_ATC_HELI_RATE_RP_I, AC_ATC_HELI_RATE_RP_D, AC_ATC_HELI_RATE_RP_FF, AC_ATC_HELI_RATE_RP_IMAX, AC_ATTITUDE_HELI_RATE_RP_FF_FILTER, AC_ATC_HELI_RATE_RP_FILT_HZ, 0.0f),
         _pid_rate_pitch(AC_ATC_HELI_RATE_RP_P, AC_ATC_HELI_RATE_RP_I, AC_ATC_HELI_RATE_RP_D, AC_ATC_HELI_RATE_RP_FF, AC_ATC_HELI_RATE_RP_IMAX, AC_ATTITUDE_HELI_RATE_RP_FF_FILTER, AC_ATC_HELI_RATE_RP_FILT_HZ, 0.0f),
         _pid_rate_yaw(AC_ATC_HELI_RATE_YAW_P, AC_ATC_HELI_RATE_YAW_I, AC_ATC_HELI_RATE_YAW_D, AC_ATC_HELI_RATE_YAW_FF, AC_ATC_HELI_RATE_YAW_IMAX, AC_ATTITUDE_HELI_RATE_Y_FF_FILTER, AC_ATC_HELI_RATE_YAW_FILT_HZ, 0.0f)

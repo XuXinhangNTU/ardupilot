@@ -25,7 +25,7 @@
 
 class AC_AttitudeControl_Sub : public AC_AttitudeControl {
 public:
-    AC_AttitudeControl_Sub(AP_AHRS_View &ahrs, const AP_MultiCopter &aparm, AP_MotorsMulticopter& motors);
+    AC_AttitudeControl_Sub(AP_AHRS_View &ahrs, const AP_MultiCopter &aparm, AP_MotorsMulticopter& motors,AP_WheelEncoder &wheel);
 
     // empty destructor to suppress compiler warning
     virtual ~AC_AttitudeControl_Sub() {}

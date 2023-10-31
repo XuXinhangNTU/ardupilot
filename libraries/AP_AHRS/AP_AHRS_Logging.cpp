@@ -27,6 +27,10 @@ void AP_AHRS::Write_AHRS2() const
         q2    : quat.q2,
         q3    : quat.q3,
         q4    : quat.q4,
+        gyro_x          : _gyro_estimate.x,
+        gyro_y          : _gyro_estimate.y,
+        gyro_z          : _gyro_estimate.z,
+        
     };
     AP::logger().WriteBlock(&pkt, sizeof(pkt));
 }

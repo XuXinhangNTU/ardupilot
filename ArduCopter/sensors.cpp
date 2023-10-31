@@ -9,7 +9,49 @@ void Copter::read_barometer(void)
 
     motors->set_air_density_ratio(barometer.get_air_density_ratio());
 }
+void Copter::logging_gg(void)
+{
+    // AP::logger().Write("BGG","TimesUS,rnd,rn,drd,cot,err,rr,rl,rf,ve,dr,dy,ay","Qffffffffffff",
+    // AP_HAL::micros64(),(double)(attitude_control->roll_deg_gw),(double)(attitude_control->roll_gw),
+    // (double)(attitude_control->_balance_desired_roll),(double)(attitude_control->_balance_control),(double)(attitude_control->_balance_error),
+    // (double)(attitude_control->rate_right),(double)(attitude_control->rate_left),
+    // (double)(attitude_control->rate_forward),(double)(attitude_control->_velocity_error),(double)(attitude_control->_rate_desired),(double)(attitude_control->_desired_yaw_rate),
+    // (double)(attitude_control->_actual_yaw_rate));
+    AP::logger().Write("BGW","TimesUS,rnd,rn,drd,dvr,vr,E,ex,ey,ez,rf","Qffffffffff",
+    AP_HAL::micros64(),(double)(attitude_control->roll_deg_gw),(double)(attitude_control->roll_gw),
+    (double)(attitude_control->desired_roll_deg_gw),(double)(attitude_control->desired_v_roll),
+    (double)(attitude_control->now_v_roll),(double)(attitude_control->true_error),(double)(attitude_control->_error_x),
+    (double)(attitude_control->_error_y),(double)(attitude_control->_error_z),(double)(attitude_control->rate_forward));
 
+    // AP::logger().Write("MPC_0","TimesUS,xn,xdn,xp,xdp,F,b,dv,da,bout,PWMF,fd,xddn,xdde,dist","Qfffffffffffffff",
+    // AP_HAL::micros64(),(double)(attitude_control->_theta_now),
+    // (double)(attitude_control->_theta_dot_now),(double)(attitude_control->_theta_predict),(double)(attitude_control->_theta_dot_predict),
+    // (double)(attitude_control->_F_now),(double)(attitude_control->_beta_now),
+    // (double)(attitude_control->desired_v_roll),(double)(attitude_control->_desired_xdd),
+    // (double)(attitude_control->_output_beta),(double)(attitude_control->_F_desired_PWM),
+    // (double)(attitude_control->_F_desired),(double)(attitude_control->_x_dot_dot_now),(double)(attitude_control->_x_dot_dot_latest_estimate),(double)(attitude_control->_disturbance));
+    AP::logger().Write("MPC_0","TimesUS,xn,xdn,Fl,bl,Fpd,dist,xdde,xddp,vd,ad,F_d,bout,pid","Qffffffffffff",
+    AP_HAL::micros64(),(double)(attitude_control->_theta_now),
+    (double)(attitude_control->_theta_dot_now),(double)(attitude_control->_F_last),(double)(attitude_control->_beta_last),
+    (double)(attitude_control->_F_desired_PWM),(double)(attitude_control->_disturbance),
+    (double)(attitude_control->_x_dot_dot_latest_estimate),(double)(attitude_control->_theta_dot_dot_last_predict),
+    (double)(attitude_control->desired_v_roll),(double)(attitude_control->_desired_xdd),(double)(attitude_control->_F_desired),
+    (double)(attitude_control->_output_beta),(double)(attitude_control->_remake)
+    // (double)(attitude_control->desired_v_roll),(double)(attitude_control->_desired_xdd),
+    // (double)(attitude_control->_output_beta),(double)(attitude_control->_F_desired_PWM),
+    // (double)(attitude_control->_F_desired),(double)(attitude_control->_x_dot_dot_now),(double)(attitude_control->_x_dot_dot_latest_estimate),(double)(attitude_control->_disturbance)
+    );
+    //      AP::logger().Write("MPC_0","TimesUS,xn,xdn,xp,xdp,F,b","Qffffff",
+    // AP_HAL::micros64(),(double)(attitude_control->_theta_now),
+    // (double)(attitude_control->_theta_dot_now),(double)(attitude_control->_theta_predict),(double)(attitude_control->_theta_dot_predict),
+    // (double)(attitude_control->_F_now),(double)(attitude_control->_beta_now)
+    // // (double)(attitude_control->desired_v_roll),(double)(attitude_control->_desired_xdd),
+    // // (double)(attitude_control->_output_beta),(double)(attitude_control->_F_desired_PWM),
+    // // (double)(attitude_control->_F_desired),(double)(attitude_control->_x_dot_dot_now),(double)(attitude_control->_x_dot_dot_latest_estimate),(double)(attitude_control->_disturbance)
+    // );
+    
+
+}
 void Copter::init_rangefinder(void)
 {
 #if RANGEFINDER_ENABLED == ENABLED
