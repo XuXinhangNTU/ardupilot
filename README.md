@@ -1,3 +1,10 @@
+# How to use this repo
+## Step 1
+~ Tools/environment_install/install-prereqs-ubuntu.sh -y
+## Step 2
+~ git submodule update --recursive
+
+
 # ArduPilot Project
 
 <a href="https://ardupilot.org/discord"><img src="https://img.shields.io/discord/674039678562861068.svg" alt="Discord">
