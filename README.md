@@ -1,10 +1,25 @@
 # How to use this repo
 ## Step 1
-~ Tools/environment_install/install-prereqs-ubuntu.sh -y
+```sh
+Tools/environment_install/install-prereqs-ubuntu.sh -y
+```
 ## Step 2
-~ git submodule update --init --recursive
-
-
+```sh
+git submodule update --init --recursive
+```
+## Step 3
+```sh
+./waf distclean
+./waf configure --board=CubeOrange
+```
+## Step 4
+```sh
+./waf copter
+```
+## Step 5
+```sh
+~ ./waf --targets bin/arducopter --upload
+```
 # ArduPilot Project
 
 <a href="https://ardupilot.org/discord"><img src="https://img.shields.io/discord/674039678562861068.svg" alt="Discord">
